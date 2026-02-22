@@ -16,7 +16,7 @@
   <section id="loginView" class="loginWrap">
     <div class="loginCard">
       <div class="brand">
-        <div class="dot"></div>
+        <img src="logo.png" alt="E-TODA Logo" class="logo">
         <div>
           <div class="brandName">E-TODA</div>
           <div class="brandSub">Administrator Panel</div>
@@ -41,7 +41,7 @@
   <section id="appView" class="app hidden">
     <aside class="sidebar">
       <div class="sideBrand">
-        <div class="dot"></div>
+        <img src="logo.png" alt="E-TODA Logo" class="logo">
         <div>
           <div class="brandName">E-TODA</div>
           <div class="brandSub">Administrator Panel</div>
@@ -76,10 +76,8 @@
               <option value="all">All Status</option>
               <option value="approved">approved</option>
               <option value="terminated">terminated</option>
-              <option value="pending">pending</option>
-              <option value="rejected">rejected</option>
             </select>
-            <input id="commuterSearch" class="search" placeholder="Search name / mobile..." />
+            <input id="commuterSearch" class="search" placeholder="Search name / mobile number / userid..." />
           </div>
         </div>
 
@@ -87,11 +85,6 @@
           <div class="card">
             <div class="cardHead">Commuter List</div>
             <div id="commuterList" class="list"></div>
-          </div>
-
-          <div class="card">
-            <div class="cardHead">Info</div>
-            <div class="muted">Click a commuter to edit details.</div>
           </div>
         </div>
       </section>
@@ -111,7 +104,7 @@
               <option value="terminated">terminated</option>
               <option value="rejected">rejected</option>
             </select>
-            <input id="driverSearch" class="search" placeholder="Search name / mobile / plate..." />
+            <input id="driverSearch" class="search" placeholder="Search name / mobile / plate number / userid..." />
           </div>
         </div>
 
@@ -119,11 +112,6 @@
           <div class="card">
             <div class="cardHead">Driver List</div>
             <div id="driverList" class="list"></div>
-          </div>
-
-          <div class="card">
-            <div class="cardHead">Info</div>
-            <div class="muted">Click a driver to edit details.</div>
           </div>
         </div>
       </section>
@@ -146,32 +134,9 @@
         </div>
 
         <div class="gridSupport">
-          <div class="card">
+          <div class="card fullWidth">
             <div class="cardHead">Tickets</div>
             <div id="ticketList" class="list"></div>
-          </div>
-
-          <div class="card chatCard">
-            <div class="chatHead">
-              <div>
-                <div class="strong" id="ticketTitle">Select a ticket</div>
-                <div class="muted tiny" id="ticketMeta">—</div>
-              </div>
-              <div class="chatActions">
-                <button id="closeTicketBtn" class="btn">Close</button>
-                <button id="reopenTicketBtn" class="btn">Reopen</button>
-                <button id="deleteTicketBtn" class="btn danger">Delete</button>
-              </div>
-            </div>
-
-            <div id="chatBox" class="chatBox empty">
-              <div class="muted">No ticket selected.</div>
-            </div>
-
-            <div class="chatComposer">
-              <input id="chatInput" class="chatInput" placeholder="Type a message..." />
-              <button id="sendChatBtn" class="btn primary">Send</button>
-            </div>
           </div>
         </div>
       </section>
@@ -186,7 +151,7 @@
         <div id="uModalTitle" class="modalTitle">Edit User</div>
         <div id="uModalSub" class="modalSub muted tiny">—</div>
       </div>
-      <button id="uModalClose" class="iconBtn">✕</button>
+     <!-- <button id="uModalClose" class="iconBtn">✕</button> -->
     </div>
 
     <div id="uModalBody" class="modalBody"></div>
@@ -196,46 +161,64 @@
       <button id="uModalSave" class="btn primary">Save Changes</button>
     </div>
   </div>
-
-  <!-- CONFIRM MODAL -->
-  <div id="cModalBackdrop" class="backdrop hidden"></div>
-  <div id="cModal" class="confirm hidden" role="dialog" aria-modal="true">
-    <div class="confirmHead">
-      <div id="cIcon" class="confirmIcon">✓</div>
-      <div class="confirmText">
-        <div id="cTitle" class="confirmTitle">Confirm</div>
-        <div id="cSubtitle" class="confirmSub muted tiny">—</div>
-      </div>
-      <button id="cClose" class="iconBtn">✕</button>
-    </div>
-
-    <div id="cBody" class="confirmBody"></div>
-
-    <div class="confirmFoot">
-      <button id="cCancel" class="btn">Cancel</button>
-      <button id="cOk" class="btn primary">Confirm</button>
-    </div>
-  </div>
    
-  <!-- NOTICE MODAL -->
-<div id="nModalBackdrop" class="backdrop hidden"></div>
+<!-- CONFIRM MODAL -->
+<div id="cModalBackdrop" class="mBackdrop hidden"></div>
 
-<div id="nModal" class="notice hidden" role="dialog" aria-modal="true">
-  <div class="noticeHead">
-    <div id="nIcon" class="noticeIcon">✓</div>
+<div id="cModal" class="mModal hidden" role="dialog" aria-modal="true">
+ <!--  <button id="cClose" class="mClose" aria-label="Close">✕</button> -->
+
+  <div id="cIconWrap" class="mIconWrap">
+    <div id="cIcon" class="mIcon">!</div>
+  </div>
+
+  <div class="mText">
+    <div id="cTitle" class="mTitle">Are you sure?</div>
+    <div id="cSubtitle" class="mSub">This action cannot be undone.</div>
+  </div>
+
+  <div id="cBody" class="mBody"></div>
+
+  <div class="mActions">
+    <button id="cOk" class="mBtn mBtnPrimary">Confirm</button>
+    <button id="cCancel" class="mBtn mBtnGhost">Cancel</button>
+  </div>
+</div>
+
+<!-- SUPPORT CHAT MODAL -->
+<div id="sModalBackdrop" class="mBackdrop hidden"></div>
+
+<div id="sModal" class="sModal hidden" role="dialog" aria-modal="true">
+  
+
+  <div class="sHeader">
     <div>
-      <div id="nTitle" class="noticeTitle">Saved</div>
-      <div id="nSubtitle" class="noticeSub muted tiny">
-        Changes were applied successfully.
-      </div>
+      <div id="sTitle" class="sTitle">Select a ticket</div>
+      <div id="sMeta" class="sMeta muted">—</div>
+    </div>
+
+    <div class="sHeaderActions">
+      <button id="sCloseTicketBtn" class="btnClose">Close Ticket</button>
+      <button id="sReopenTicketBtn" class="btnOpen">Reopen Ticket</button>
+      <button id="sDeleteTicketBtn" class="btn danger">Delete Ticket</button>
+      <button id="sClose" class="btnClosePanel" >X</button>
     </div>
   </div>
 
-  <div class="noticeFoot">
-    <button id="nOk" class="btn primary">OK</button>
+  <div id="sChatBox" class="sChatBox empty">
+    <div class="muted">No ticket selected.</div>
+  </div>
+
+  <div class="sComposer">
+    <input id="sChatInput" class="chatInput" placeholder="Type a message..." />
+    <button id="sSendBtn" class="btn primary">Send</button>
   </div>
 </div>
 
   <script type="module" src="app.js"></script>
+
+  <!-- Toast Notification (Top-right notifications) -->
+  <div id="toastHost" class="toastHost" aria-live="polite" aria-atomic="true"></div>
+
 </body>
 </html>
