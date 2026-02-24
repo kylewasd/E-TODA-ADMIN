@@ -26,13 +26,10 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-// ✅ session-only: when tab/window closes, user is logged out
 await setPersistence(auth, browserSessionPersistence);
 const db = getDatabase(app);
 
 const $ = (s) => document.querySelector(s);
-
-
 
 /* =========================
    Helpers
@@ -49,9 +46,10 @@ function show(el){ el?.classList.remove("hidden"); }
 function hide(el){ el?.classList.add("hidden"); }
 
 function badgeClass(status){
-  if(status === "terminated" || status === "rejected") return "danger";
-  if(status === "pending" || status === "closed") return "gray";
-  return "";
+  const s = String(status || "").toLowerCase();
+  if(s === "terminated" || s === "rejected") return "danger";
+  if(s === "pending" || s === "closed") return "gray";
+  return "success";
 }
 function fmtName(u){
   return (`${u.firstName||""} ${u.lastName||""}`).trim() || u.mobileNumber || u.userId || "Unknown";
@@ -67,27 +65,14 @@ function numOr0(v){ const n = Number(v); return Number.isFinite(n) ? n : 0; }
 const toastHost = document.querySelector("#toastHost");
 
 function toast(type = "info", title = "Info", message = "", opts = {}) {
-  // Safe fallback (never block the app)
   if (!toastHost) {
     console.log(`[${type.toUpperCase()}] ${title}: ${message}`);
     return;
   }
-
-  const {
-    duration = 3200, // ms
-    closable = true
-  } = opts;
-
-  const icons = {
-    info: "i",
-    warning: "!",
-    error: "×",
-    success: "✓"
-  };
-
+  const { duration = 3200, closable = true } = opts;
+  const icons = { info: "i", warning: "!", error: "×", success: "✓" };
   const el = document.createElement("div");
   el.className = `toast ${type}`;
-
   el.innerHTML = `
     <div class="toastIcon">${icons[type] ?? "i"}</div>
     <div class="toastBody">
@@ -96,28 +81,20 @@ function toast(type = "info", title = "Info", message = "", opts = {}) {
     </div>
     ${closable ? `<button class="toastClose" aria-label="Close">✕</button>` : ""}
   `;
-
-  // Close
   const removeToast = () => {
     el.style.opacity = "0";
     el.style.transform = "translateY(-4px)";
     setTimeout(() => el.remove(), 180);
   };
-
   el.querySelector(".toastClose")?.addEventListener("click", removeToast);
-
   toastHost.appendChild(el);
-
-  if (duration > 0) {
-    setTimeout(removeToast, duration);
-  }
+  if (duration > 0) setTimeout(removeToast, duration);
 }
 
-// Convenience
 const notify = {
-  info:    (t, m, o) => toast("info", t, m, o),
+  info: (t, m, o) => toast("info", t, m, o),
   warning: (t, m, o) => toast("warning", t, m, o),
-  error:   (t, m, o) => toast("error", t, m, o),
+  error: (t, m, o) => toast("error", t, m, o),
   success: (t, m, o) => toast("success", t, m, o),
 };
 
@@ -147,21 +124,15 @@ const navBtns = document.querySelectorAll(".navBtn");
 const viewCommuters = $("#viewCommuters");
 const viewDrivers = $("#viewDrivers");
 const viewSupport = $("#viewSupport");
-
-const viewFares = $("#viewFares"); // ADD THIS
+const viewFares = $("#viewFares");
 
 function setActiveNav(view){
   navBtns.forEach(b => b.classList.toggle("active", b.dataset.view === view));
-
-  hide(viewCommuters);
-  hide(viewDrivers);
-  hide(viewSupport);
-  hide(viewFares); // ADD
-
+  hide(viewCommuters); hide(viewDrivers); hide(viewSupport); hide(viewFares);
   if(view === "commuters") show(viewCommuters);
   if(view === "drivers") show(viewDrivers);
   if(view === "support") show(viewSupport);
-  if(view === "fares") show(viewFares); // ADD
+  if(view === "fares") show(viewFares);
 }
 document.addEventListener("click", (e)=>{
   const b = e.target.closest(".navBtn");
@@ -192,9 +163,7 @@ const uModalClose = $("#uModalClose");
 const uModalCancel = $("#uModalCancel");
 const uModalSave = $("#uModalSave");
 
-// ===============================
-// Confirm Modal (new UI)
-// ===============================
+// Confirm Modal
 const cModalBackdrop = $("#cModalBackdrop");
 const cModal = $("#cModal");
 const cIcon = $("#cIcon");
@@ -207,39 +176,23 @@ const cOk = $("#cOk");
 
 let _confirmResolve = null;
 
-function confirmModal({
-  title = "Are you sure?",
-  subtitle = "Please review before confirming.",
-  bodyHtml = "",
-  confirmText = "Confirm",
-  cancelText = "Cancel",
-  variant = "primary" // "primary" | "danger"
-}) {
+function confirmModal({ title = "Are you sure?", subtitle = "Please review before confirming.", bodyHtml = "", confirmText = "Confirm", cancelText = "Cancel", variant = "primary" }) {
   const missing = !cModalBackdrop || !cModal || !cTitle || !cSubtitle || !cBody || !cOk || !cCancel;
   if (missing) return Promise.resolve(window.confirm(`${title}\n\n${subtitle}`));
-
   return new Promise((resolve) => {
     _confirmResolve = resolve;
-
     cTitle.textContent = title;
     cSubtitle.textContent = subtitle;
     cBody.innerHTML = bodyHtml || "";
-
     cOk.textContent = confirmText;
     cCancel.textContent = cancelText;
-
-    // styles
     cModal.classList.remove("primary", "danger");
     cModal.classList.add(variant);
-
     cOk.classList.remove("mBtnPrimary", "mBtnDanger");
     cOk.classList.add(variant === "danger" ? "mBtnDanger" : "mBtnPrimary");
-
     cIcon.textContent = variant === "danger" ? "!" : "✓";
-
     cModalBackdrop.classList.remove("hidden");
     cModal.classList.remove("hidden");
-
     setTimeout(() => cOk.focus(), 0);
   });
 }
@@ -251,18 +204,13 @@ function closeConfirm(result) {
   if (_confirmResolve) _confirmResolve(result);
   _confirmResolve = null;
 }
-
 cModalBackdrop?.addEventListener("click", () => closeConfirm(false));
 cClose?.addEventListener("click", () => closeConfirm(false));
 cCancel?.addEventListener("click", () => closeConfirm(false));
 cOk?.addEventListener("click", () => closeConfirm(true));
 
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && _confirmResolve) closeConfirm(false);
-});
-
 /* =========================
-   Notice Modal (your no-X version)
+   Notice Modal
 ========================= */
 const nModalBackdrop = $("#nModalBackdrop");
 const nModal = $("#nModal");
@@ -274,33 +222,21 @@ const nOk = $("#nOk");
 
 let _noticeResolve = null;
 
-function noticeModal({
-  title = "Notice",
-  subtitle = "",
-  bodyHtml = "",
-  variant = "primary"
-}) {
+function noticeModal({ title = "Notice", subtitle = "", bodyHtml = "", variant = "primary" }) {
   const missing = !nModalBackdrop || !nModal || !nTitle || !nSubtitle || !nBody || !nOk;
-  if (missing) {
-    window.alert(`${title}\n\n${subtitle}`);
-    return Promise.resolve(true);
-  }
-
+  if (missing) { window.alert(`${title}\n\n${subtitle}`); return Promise.resolve(true); }
   return new Promise((resolve) => {
     _noticeResolve = resolve;
     nTitle.textContent = title;
     nSubtitle.textContent = subtitle;
     nBody.innerHTML = bodyHtml;
-
     nIcon?.classList.toggle("danger", variant === "danger");
     if (nIcon) nIcon.textContent = variant === "danger" ? "!" : "✓";
-
     nModalBackdrop.classList.remove("hidden");
     nModal.classList.remove("hidden");
     setTimeout(() => nOk.focus(), 0);
   });
 }
-
 function closeNotice() {
   nModalBackdrop?.classList.add("hidden");
   nModal?.classList.add("hidden");
@@ -310,96 +246,54 @@ function closeNotice() {
 }
 nModalBackdrop?.addEventListener("click", closeNotice);
 nOk?.addEventListener("click", closeNotice);
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && _noticeResolve) closeNotice();
-});
 
 /* =========================
-   User Modal control
+   User Modal Control & Detect Changes
 ========================= */
 let selectedUserKey = null;
 let selectedUser = null;
 let selectedRole = null;
-
-let originalFormData = {};   // 👈 ADD THIS LINE
-
-
-/* =========================
-   Form Change Detection
-========================= */
+let originalFormData = {};
 
 function captureOriginalForm() {
   originalFormData = {};
-
   const inputs = uModalBody.querySelectorAll("[data-field]");
-  inputs.forEach(input => {
-    originalFormData[input.dataset.field] = input.value.trim();
-  });
-
+  inputs.forEach(input => { originalFormData[input.dataset.field] = input.value.trim(); });
   toggleSaveButton(false);
 }
-
 function monitorFormChanges() {
   const inputs = uModalBody.querySelectorAll("[data-field]");
-
   inputs.forEach(input => {
     input.addEventListener("input", checkIfFormChanged);
     input.addEventListener("change", checkIfFormChanged);
   });
 }
-
 function checkIfFormChanged() {
   const inputs = uModalBody.querySelectorAll("[data-field]");
   let changed = false;
-
   inputs.forEach(input => {
     const field = input.dataset.field;
     const currentValue = input.value.trim();
     const originalValue = originalFormData[field] ?? "";
-
-    if (currentValue !== originalValue) {
-      changed = true;
-    }
+    if (currentValue !== originalValue) changed = true;
   });
-
   toggleSaveButton(changed);
 }
-
 function toggleSaveButton(enable) {
   if (!uModalSave) return;
-
   uModalSave.disabled = !enable;
-
-  if (enable) {
-    uModalSave.classList.remove("disabled");
-  } else {
-    uModalSave.classList.add("disabled");
-  }
+  uModalSave.classList.toggle("disabled", !enable);
 }
-
-/* =========================
- END Change Detection
-========================= */
 
 function openUserModal(){ show(uModalBackdrop); show(uModal); }
 function closeUserModal(){
   hide(uModalBackdrop); hide(uModal);
   if(uModalBody) uModalBody.innerHTML = "";
-  selectedUserKey = null;
-  selectedUser = null;
-  selectedRole = null;
+  selectedUserKey = null; selectedUser = null; selectedRole = null;
 }
 uModalBackdrop?.addEventListener("click", closeUserModal);
 uModalClose?.addEventListener("click", closeUserModal);
 uModalCancel?.addEventListener("click", closeUserModal);
-
-// PIN digits only
-uModalBody?.addEventListener("input",(e)=>{
-  const el = e.target;
-  if(!(el instanceof HTMLInputElement)) return;
-  if(el.dataset.field !== "pin") return;
-  el.value = el.value.replace(/\D/g,"").slice(0,4);
-});
 
 /* =========================
    Auth
@@ -408,149 +302,78 @@ loginBtn?.addEventListener("click", async ()=>{
   try{
     await signInWithEmailAndPassword(auth, emailEl.value.trim(), passEl.value);
   }catch(e){
-   /* ========================= await noticeModal({ title: "Login failed", subtitle: e?.message || "Please try again.", variant: "danger" });
-   ========================= */ 
-   notify?.error?.("Login failed", "Please try again.");
+    notify?.error?.("Login failed", "Please try again.");
   }
 });
-
-window.addEventListener("beforeunload", () => {
-  try { signOut(auth); } catch {}
-});
-
 logoutBtn?.addEventListener("click", async () => {
-  const ok = await confirmModal({
-    title: "Log out?",
-    subtitle: "You will need to sign in again to access the admin panel.",
-    confirmText: "Log out",
-    cancelText: "Cancel",
-    variant: "danger",
-    bodyHtml: ""
-  });
-
+  const ok = await confirmModal({ title: "Log out?", subtitle: "You will need to sign in again to access the admin panel.", confirmText: "Log out", variant: "danger" });
   if (!ok) return;
-
-  try {
-    await signOut(auth);
-    // Optional: toast/notify
-    notify?.success?.("Logged out", "You have been signed out.");
-  } catch (e) {
-    notify?.error?.("Failed", e?.message || "Unable to log out.");
-  }
+  try { await signOut(auth); notify?.success?.("Logged out", "You have been signed out."); } catch (e) { notify?.error?.("Failed", e?.message); }
 });
 
 onAuthStateChanged(auth, async(user)=>{
-  if(!user){
-    show(loginView); hide(appView);
-    return;
-  }
-
-  // Admin check
+  if(!user){ show(loginView); hide(appView); return; }
   const adminSnap = await get(ref(db, `users/${user.uid}`));
   if(!adminSnap.exists() || adminSnap.val().userType !== "admin"){
-    await noticeModal({
-      title: "Access denied",
-      subtitle: "Admin account not found at users/{AUTH_UID}.",
-      variant: "danger"
-    });
-    await signOut(auth);
-    show(loginView); hide(appView);
-    return;
+    await noticeModal({ title: "Access denied", subtitle: "Admin account not found.", variant: "danger" });
+    await signOut(auth); return;
   }
-
   signedInAs.textContent = user.email || user.uid;
-
-  hide(loginView); show(appView);
-  setActiveNav("commuters");
-  
+  hide(loginView); show(appView); setActiveNav("commuters");
   notify?.success?.("Logged in", "Welcome back!");
   startUsersListener();
-  startSupportTicketSystem(); // ✅ correct call
+  startSupportTicketSystem();
   loadFareSettings();
 });
 
 /* =========================
-   Users listener + rendering
+   Users listener + rendering (FIXED SECTION)
 ========================= */
-let usersCache = {};
+let usersCache = {};   // Commuters
+let driversCache = {}; // Drivers
+
 function startUsersListener(){
-  onValue(ref(db,"users"), (snap)=>{
+  // Listen to Commuters
+  onValue(ref(db, "users"), (snap) => {
     usersCache = snap.val() || {};
     renderCommuters();
+  });
+  // Listen to Drivers
+  onValue(ref(db, "drivers"), (snap) => {
+    driversCache = snap.val() || {};
     renderDrivers();
   });
 }
 
-function filterUsers({role, status, kw}){
-  const list = Object.entries(usersCache)
-    .map(([key,u])=>({key, ...u}))
-    .filter(u => u.userType === role)
-    .filter(u => u.userType !== "admin");
-
+function filterUsers({sourceData, status, kw}){
+  const list = Object.entries(sourceData).map(([key,u])=>({key, ...u}));
   const keyword = (kw || "").toLowerCase();
-
   return list.filter(u=>{
-    const st = u.approvalStatus || "approved";
+    const st = u.status || "approved";
     if(status !== "all" && st !== status) return false;
-
     if(keyword){
-      const hay = [
-        u.key,               // ✅ USER ID (RTDB key)
-        u.userId,            // ✅ if stored separately
-        u.firstName,
-        u.lastName,
-        u.mobileNumber,
-        u.plateNumber
-      ]
-      .filter(Boolean)
-      .join(" ")
-      .toLowerCase();
-
+      const hay = [u.key, u.firstName, u.lastName, u.mobileNumber, u.plateNumber].filter(Boolean).join(" ").toLowerCase();
       if(!hay.includes(keyword)) return false;
     }
-
     return true;
   });
 }
-
-/* =========================
-function filterUsers({role, status, kw}){
-  const list = Object.entries(usersCache)
-    .map(([key,u])=>({key, ...u}))
-    .filter(u => u.userType === role)
-    .filter(u => u.userType !== "admin");
-
-  return list.filter(u=>{
-    const st = u.approvalStatus || "approved";
-    if(status !== "all" && st !== status) return false;
-
-    if(kw){
-      const hay = [u.firstName, u.lastName, u.mobileNumber, u.plateNumber]
-        .filter(Boolean).join(" ").toLowerCase();
-      if(!hay.includes(kw.toLowerCase())) return false;
-    }
-    return true;
-  });
-
-========================= */
 
 function renderCommuters(){
   if(!commuterList) return;
   const status = commuterStatusFilter?.value || "all";
   const kw = (commuterSearch?.value || "").trim();
-  const rows = filterUsers({role:"commuter", status, kw});
-
+  const rows = filterUsers({sourceData: usersCache, status, kw});
   commuterList.innerHTML = rows.map(u=>{
-    const st = u.approvalStatus || "approved";
+    const st = u.status || "approved";
     return `
       <div class="item" data-userkey="${esc(u.key)}" data-role="commuter">
         <div class="rowTop">
           <div class="strong">${esc(fmtName(u))}</div>
           <div class="badge ${badgeClass(st)}">${esc(st)}</div>
         </div>
-        <div class="muted tiny">${esc(u.mobileNumber||"")} • commuter</div>
-      </div>
-    `;
+        <div class="muted tiny">${esc(u.mobileNumber||"")} • Commuter</div>
+      </div>`;
   }).join("");
 }
 
@@ -558,19 +381,17 @@ function renderDrivers(){
   if(!driverList) return;
   const status = driverStatusFilter?.value || "all";
   const kw = (driverSearch?.value || "").trim();
-  const rows = filterUsers({role:"driver", status, kw});
-
+  const rows = filterUsers({sourceData: driversCache, status, kw});
   driverList.innerHTML = rows.map(u=>{
-    const st = u.approvalStatus || "approved";
+    const st = u.status || "approved";
     return `
       <div class="item" data-userkey="${esc(u.key)}" data-role="driver">
         <div class="rowTop">
           <div class="strong">${esc(fmtName(u))}</div>
           <div class="badge ${badgeClass(st)}">${esc(st)}</div>
         </div>
-        <div class="muted tiny">${esc(u.mobileNumber||"")} • driver ${u.plateNumber ? "• "+esc(u.plateNumber) : ""}</div>
-      </div>
-    `;
+        <div class="muted tiny">${esc(u.mobileNumber||"")} • Driver ${u.plateNumber ? "• "+esc(u.plateNumber) : ""}</div>
+      </div>`;
   }).join("");
 }
 
@@ -580,190 +401,99 @@ driverStatusFilter?.addEventListener("change", renderDrivers);
 driverSearch?.addEventListener("input", renderDrivers);
 
 /* =========================
-   Open edit modal
+   Open edit modal (FIXED PATHS)
 ========================= */
 document.addEventListener("click", async(e)=>{
   const item = e.target.closest(".item[data-userkey][data-role]");
   if(!item) return;
-
   const key = item.dataset.userkey;
   const role = item.dataset.role;
+  const path = role === "driver" ? `drivers/${key}` : `users/${key}`;
 
-  const snap = await get(ref(db, `users/${key}`));
+  const snap = await get(ref(db, path));
   if(!snap.exists()) return;
-
   const u = snap.val();
   if(u.userType === "admin"){
-    await noticeModal({ title: "Not allowed", subtitle: "Admin account cannot be edited.", variant: "danger" });
-    return;
+    notify.warning("Not allowed", "Admin cannot be edited."); return;
   }
 
-  selectedUserKey = key;
-  selectedUser = u;
-  selectedRole = role;
-
+  selectedUserKey = key; selectedUser = u; selectedRole = role;
   uModalTitle.textContent = `${role.toUpperCase()} • ${fmtName(u)}`;
   uModalSub.textContent = `User ID: ${u.userId || selectedUserKey}`;
   uModalBody.innerHTML = buildEditForm(u, role);
-  captureOriginalForm();
-  monitorFormChanges();
-  openUserModal();
+  captureOriginalForm(); monitorFormChanges(); openUserModal();
 });
 
 function buildEditForm(u, role){
   const address = u.address || [u.barangay, u.city, u.province].filter(Boolean).join(", ");
-
-  const statusOptions = role === "commuter"
-    ? ["approved","terminated"]
-    : ["pending","approved","rejected","terminated"];
-
-  const currentStatus = u.approvalStatus || (role==="driver" ? "pending" : "approved");
+  const statusOptions = role === "commuter" ? ["approved","terminated"] : ["pending","approved","rejected","terminated"];
+  const currentStatus = u.status || (role==="driver" ? "pending" : "approved");
 
   return `
     <div class="formGrid">
       ${inputField("firstName","First Name", u.firstName)}
       ${inputField("lastName","Last Name", u.lastName)}
-      ${inputField("balance","Balance", String(u.balance ?? 0), "number")}
+      ${inputField("walletBalance","Wallet Balance", String(u.walletBalance ?? 0), "number")}
       ${inputField("address","Address", address)}
       ${inputField("mobileNumber","Mobile Number", u.mobileNumber)}
       ${pinField(u.pin || "")}
-
       <div class="field">
-        <label>Approval Status</label>
-        <select data-field="approvalStatus" class="select">
+        <label>Status</label>
+        <select data-field="status" class="select">
           ${statusOptions.map(s=>`<option value="${s}" ${s===currentStatus?"selected":""}>${s}</option>`).join("")}
         </select>
       </div>
-    </div>
-  `;
+      ${role === "driver" ? inputField("plateNumber", "Plate Number", u.plateNumber) : ""}
+    </div>`;
 }
 
 function inputField(field,label,value="", type="text"){
-  return `
-    <div class="field">
-      <label>${esc(label)}</label>
-      <input data-field="${esc(field)}" type="${type}" value="${esc(value ?? "")}" />
-    </div>
-  `;
+  return `<div class="field"><label>${esc(label)}</label><input data-field="${esc(field)}" type="${type}" value="${esc(value ?? "")}" /></div>`;
 }
-
 function pinField(value=""){
-  return `
-    <div class="field">
-      <label>4 digit pin (numbers only)</label>
-      <input data-field="pin" type="password" inputmode="numeric" maxlength="4"
-        placeholder="0000" value="${esc(value ?? "")}" />
-      <div class="muted tiny">PIN must be exactly 4 digits.</div>
-    </div>
-  `;
+  return `<div class="field"><label>4 digit pin</label><input data-field="pin" type="password" inputmode="numeric" maxlength="4" value="${esc(value ?? "")}" /></div>`;
 }
 
 /* =========================
-   Save changes (FIXED: actually writes to Firebase)
+   Save changes (FIXED PATHS)
 ========================= */
 uModalSave?.addEventListener("click", async()=>{
   if(!selectedUserKey || !selectedUser || !selectedRole) return;
+  const v = (field) => (uModalBody.querySelector(`[data-field="${CSS.escape(field)}"]`)?.value ?? "").trim();
 
-  const v = (field) =>
-    (uModalBody.querySelector(`[data-field="${CSS.escape(field)}"]`)?.value ?? "").trim();
-
-  const newFirst = v("firstName");
-  const newLast = v("lastName");
-  const newBalance = numOr0(v("balance"));
-  const newAddress = v("address");
   const newMobile = normalizeMobile(v("mobileNumber"));
   const newPin = v("pin").replace(/\D/g,"");
-  const newStatus = v("approvalStatus");
-
-  if(!newFirst || !newLast){
-    notify.warning("Invalid input", "First Name and Last Name are required.");
-    return;
-  }
-  if(!isValidMobile(newMobile)){
-    notify.warning("Invalid mobile", "Must be 11 digits starting with 09.");
-    return;
-  }
-  if(!isValidPin(newPin)){
-    notify.warning("Invalid PIN", "PIN must be exactly 4 digits.");
-    return;
+  if(!v("firstName") || !v("lastName") || !isValidMobile(newMobile) || !isValidPin(newPin)){
+    notify.warning("Invalid input", "Check names, mobile, and PIN."); return;
   }
 
-  if(selectedRole === "commuter" && !["approved","terminated"].includes(newStatus)){
-    notify.warning("Invalid status", "Commuter: approved or terminated only.");
-    return;
-  }
-  if(selectedRole === "driver" && !["pending","approved","rejected","terminated"].includes(newStatus)){
-    notify.warning("Invalid status", "Driver: pending/approved/rejected/terminated only.");
-    return;
-  }
-
-const ok = await confirmModal({
-  title: "Save changes?",
-  subtitle: "This will update the user information in the database.",
-  confirmText: "Save",
-  cancelText: "Cancel",
-  variant: "primary"
-});
+  const ok = await confirmModal({ title: "Save changes?", variant: "primary" });
   if(!ok) return;
 
   const patch = {
-    firstName: newFirst,
-    lastName: newLast,
-    balance: newBalance,
-    address: newAddress,
+    firstName: v("firstName"),
+    lastName: v("lastName"),
+    walletBalance: numOr0(v("walletBalance")),
+    address: v("address"),
     mobileNumber: newMobile,
     pin: newPin,
-    approvalStatus: newStatus
+    status: v("status")
   };
+  if(selectedRole === "driver") patch.plateNumber = v("plateNumber");
 
-  const oldKey = selectedUserKey;
-
+  const basePath = selectedRole === "driver" ? "drivers" : "users";
   try{
-    // If key changed, move node
-    if(newMobile !== oldKey){
-      const existsSnap = await get(ref(db, `users/${newMobile}`));
-      if(existsSnap.exists()){
-        notify.warning("Cannot save", "That mobile number already exists.");
-        return;
-      }
-
-      const merged = { ...selectedUser, ...patch, userType: selectedUser.userType };
-      await set(ref(db, `users/${newMobile}`), merged);
-      await remove(ref(db, `users/${oldKey}`));
-
-      selectedUserKey = newMobile;
-      selectedUser = merged;
-
-      uModalTitle.textContent = `${selectedRole.toUpperCase()} • ${fmtName(merged)}`;
-      uModalSub.textContent = `User ID: ${u.userId || selectedUserKey}`;
-      uModalBody.innerHTML = buildEditForm(merged, selectedRole);
-      notify.success("Saved", "Changes were applied successfully.");
-      captureOriginalForm();
-      monitorFormChanges();
-      toggleSaveButton(false);
-      closeUserModal();
-      return;
+    if(newMobile !== selectedUserKey){
+      const existsSnap = await get(ref(db, `${basePath}/${newMobile}`));
+      if(existsSnap.exists()){ notify.warning("Error", "Mobile already exists."); return; }
+      await set(ref(db, `${basePath}/${newMobile}`), { ...selectedUser, ...patch });
+      await remove(ref(db, `${basePath}/${selectedUserKey}`));
+    } else {
+      await update(ref(db, `${basePath}/${selectedUserKey}`), patch);
     }
-
-    // ✅ Normal update (THIS WAS MISSING IN YOUR CODE)
-    await update(ref(db, `users/${oldKey}`), patch);
-
-    const updated = (await get(ref(db, `users/${oldKey}`))).val();
-    selectedUser = updated;
-
-    uModalTitle.textContent = `${selectedRole.toUpperCase()} • ${fmtName(updated)}`;
-    uModalSub.textContent = `Key: ${oldKey}`;
-    uModalBody.innerHTML = buildEditForm(updated, selectedRole);
-
-    notify.success("Saved", "Changes were applied successfully.");
-    captureOriginalForm();   // store new values as original
-    toggleSaveButton(false);
+    notify.success("Saved", "Database updated.");
     closeUserModal();
-    return;
-  }catch(e){
-    notify.error("Save failed", e?.message || "Unable to update user.");
-    return;
-  }
+  }catch(e){ notify.error("Save failed", e.message); }
 });
 
 /* =========================
@@ -870,7 +600,7 @@ function renderTicketList() {
     return `
       <div class="item" data-ticketid="${esc(t.id)}">
         <div class="rowTop">
-          <div class="strong">${esc(t.userName || "Unknown")}</div>
+          <div class="strong">${esc(t.first || "Unknown")}</div>
           <div class="badge ${badgeClass(st)}">${esc(st)}</div>
         </div>
         <div class="muted tiny">${esc(t.userMobile || "")} • ${esc(t.type || "Others")}</div>
@@ -884,7 +614,7 @@ function openTicketThread(ticketId) {
   selectedTicketId = ticketId;
 
   const t = ticketsCache[ticketId] || {};
-  if (sTitle) sTitle.textContent = `${t.userName || "Unknown"} (${t.userMobile || ""})`;
+  if (sTitle) sTitle.textContent = `${t.first || "Unknown"} (${t.userMobile || ""})`;
   if (sMeta) sMeta.textContent = `Ticket ID: ${ticketId} • ${t.type || "Others"} • ${t.status || "open"}`;
   applyTicketUIState(t.status || "open");
 
