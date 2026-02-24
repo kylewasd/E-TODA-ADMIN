@@ -52,6 +52,7 @@
         <button class="navBtn active" data-view="commuters">Commuters</button>
         <button class="navBtn" data-view="drivers">Drivers</button>
         <button class="navBtn" data-view="support">Live Support</button>
+        <button class="navBtn" data-view="fares">Fare Adjustments</button>
       </nav>
 
       <div class="sideFooter">
@@ -115,6 +116,38 @@
           </div>
         </div>
       </section>
+
+   <!-- FARE SETTINGS -->
+<section id="viewFares" class="view hidden">
+  <div class="fareContainer">
+    <div class="fareCard">
+      
+      <div class="fareHeader">
+        <h1>Fare Configuration</h1>
+        <p class="muted">Adjust base and incremental fare settings</p>
+      </div>
+
+      <div class="fareGrid">
+        <div class="fareField">
+          <label>Base Fare (₱)</label>
+          <input id="baseFareInput" type="number" min="0" />
+        </div>
+
+        <div class="fareField">
+          <label>Incremental Fare (₱ per km)</label>
+          <input id="incrementalFareInput" type="number" min="0" />
+        </div>
+      </div>
+
+      <div class="fareActions">
+        <button id="saveFareBtn" class="btn primary">
+          Save Fare Settings
+        </button>
+      </div>
+
+    </div>
+  </div>
+</section>
 
       <!-- SUPPORT -->
       <section id="viewSupport" class="view hidden">

@@ -148,12 +148,20 @@ const viewCommuters = $("#viewCommuters");
 const viewDrivers = $("#viewDrivers");
 const viewSupport = $("#viewSupport");
 
+const viewFares = $("#viewFares"); // ADD THIS
+
 function setActiveNav(view){
   navBtns.forEach(b => b.classList.toggle("active", b.dataset.view === view));
-  hide(viewCommuters); hide(viewDrivers); hide(viewSupport);
+
+  hide(viewCommuters);
+  hide(viewDrivers);
+  hide(viewSupport);
+  hide(viewFares); // ADD
+
   if(view === "commuters") show(viewCommuters);
   if(view === "drivers") show(viewDrivers);
   if(view === "support") show(viewSupport);
+  if(view === "fares") show(viewFares); // ADD
 }
 document.addEventListener("click", (e)=>{
   const b = e.target.closest(".navBtn");
@@ -458,6 +466,7 @@ onAuthStateChanged(auth, async(user)=>{
   notify?.success?.("Logged in", "Welcome back!");
   startUsersListener();
   startSupportTicketSystem(); // ✅ correct call
+  loadFareSettings();
 });
 
 /* =========================
@@ -1065,3 +1074,54 @@ function closeSupportModal(){
 }
 sModalBackdrop?.addEventListener("click", closeSupportModal);
 sClose?.addEventListener("click", closeSupportModal);
+
+/* =========================
+   FARE SETTINGS
+========================= */
+
+const baseFareInput = $("#baseFareInput");
+const incrementalFareInput = $("#incrementalFareInput");
+const saveFareBtn = $("#saveFareBtn");
+
+// Load fares from Firebase
+function loadFareSettings(){
+  onValue(ref(db, "settings/fares"), (snap) => {
+    const data = snap.val();
+    if(!data) return;
+
+    baseFareInput.value = data.baseFare ?? 0;
+    incrementalFareInput.value = data.incrementalFare ?? 0;
+  });
+}
+
+// Save fares to Firebase
+saveFareBtn?.addEventListener("click", async () => {
+  const baseFare = Number(baseFareInput.value);
+  const incrementalFare = Number(incrementalFareInput.value);
+
+  if(baseFare < 0 || incrementalFare < 0){
+    notify.warning("Invalid Input", "Fare values cannot be negative.");
+    return;
+  }
+
+  const ok = await confirmModal({
+    title: "Update Fare Settings?",
+    subtitle: "This will affect all new ride computations.",
+    confirmText: "Save",
+    cancelText: "Cancel",
+    variant: "primary"
+  });
+
+  if(!ok) return;
+
+  try{
+    await update(ref(db, "settings/fares"), {
+      baseFare,
+      incrementalFare
+    });
+
+    notify.success("Updated", "Fare settings saved successfully.");
+  }catch(e){
+    notify.error("Failed", e?.message || "Could not update fare settings.");
+  }
+});
